@@ -5,30 +5,32 @@ import shutil
 # inbuild django imports
 from django.http import HttpRequest
 from django.conf import settings
-from django.utils.importlib import import_module
+from django.utils.module_loading import import_module
 
 # third-party django imports
-from mongoengine.connection import (DEFAULT_CONNECTION_NAME, _connections, get_connection,
-    _dbs)
+from mongoengine.connection import (DEFAULT_CONNECTION_NAME, get_connection)
 
 # inter-app imports
 
 # local imports
 
+
 class EnhancedHttpRequest(HttpRequest):
 
-    def __init__(self, method = 'GET'):
+    def __init__(self, method='GET'):
         super(EnhancedHttpRequest, self).__init__()
         self.method = method
 
         session_engine = import_module(settings.SESSION_ENGINE)
-        self.session = session_engine.SessionStore(session_key = None)
+        self.session = session_engine.SessionStore(session_key=None)
+
 
 class TestViewMixin(object):
 
-    def create_view_object(self, view, request, args = [], kwargs = {}):
+    def create_view_object(self, view, request, args=[], kwargs={}):
         view_object = view()
-        view_object.request, view_object.args, view_object.kwargs = request, args, kwargs
+        view_object.request, view_object.args, view_object.kwargs = request, \
+            args, kwargs
 
         return view_object
 
@@ -39,14 +41,14 @@ class ClearFileStorageMixin(object):
 
     def tearDown(self):
         if self.TEST_STORAGE_DIRECTORY:
-            shutil.rmtree(self.TEST_STORAGE_DIRECTORY, ignore_errors = True)
+            shutil.rmtree(self.TEST_STORAGE_DIRECTORY, ignore_errors=True)
             os.makedirs(self.TEST_STORAGE_DIRECTORY)
 
     @classmethod
     def tearDownAll(cls):
-        if self.TEST_STORAGE_DIRECTORY:
-            shutil.rmtree(self.TEST_STORAGE_DIRECTORY, ignore_errors = True)
-            os.makedirs(self.TEST_STORAGE_DIRECTORY)
+        if cls.TEST_STORAGE_DIRECTORY:
+            shutil.rmtree(cls.TEST_STORAGE_DIRECTORY, ignore_errors=True)
+            os.makedirs(cls.TEST_STORAGE_DIRECTORY)
 
 
 class CopyLargeFileMixin(ClearFileStorageMixin):
@@ -64,19 +66,19 @@ class CopyLargeFileMixin(ClearFileStorageMixin):
     TEST_STORAGE_DIRECTORY = None
 
     def tearDown(self):
-	if not self.STORED_FILE_PATH:
+        if not self.STORED_FILE_PATH:
             return super(CopyLargeFileMixin, self).tearDown()
 
-	super(CopyLargeFileMixin, self).tearDown()
-	shutil.copy(self.STORED_FILE_PATH, self.TEST_STORAGE_DIRECTORY)
+        super(CopyLargeFileMixin, self).tearDown()
+        shutil.copy(self.STORED_FILE_PATH, self.TEST_STORAGE_DIRECTORY)
 
     @classmethod
     def tearDownAll(cls):
-	if not self.STORED_FILE_PATH:
-	    return super(CopyLargeFileMixin, cls).tearDownAll()
-        
-	super(CopyLargeFileMixin, cls).tearDownAll()
-	shutil.copy(self.STORED_FILE_PATH, self.TEST_STORAGE_DIRECTORY)
+        if not cls.STORED_FILE_PATH:
+            return super(CopyLargeFileMixin, cls).tearDownAll()
+
+        super(CopyLargeFileMixin, cls).tearDownAll()
+        shutil.copy(cls.STORED_FILE_PATH, cls.TEST_STORAGE_DIRECTORY)
 
 
 class ModifySessionMixin(object):
@@ -91,8 +93,9 @@ class ModifySessionMixin(object):
 def disconnect(alias=DEFAULT_CONNECTION_NAME):
     """ To disconnect pymongo connection.
 
-    Copied from mongoengine/connection.py to fix a bug in mongoengine source code,
-    ('disconnect' method is removed from pymongo MongoClient in latest version.)
+    Copied from mongoengine/connection.py to fix a bug in mongoengine source
+    code, ('disconnect' method is removed from pymongo MongoClient in latest
+    version.)
     """
     global _connections
     global _dbs
